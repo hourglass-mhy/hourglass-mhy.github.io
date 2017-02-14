@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        canvas {
+            border: 1px solid red;
+            margin-left: 100px;
+        }
+    </style>
+</head>
+<body>
+<canvas id="myCanvas" width="240" height="240"></canvas>
+</body>
+</html>
+<!--导入jq,方便进行事件的绑定-->
+<script src="js/jquery-2.1.4.js"></script>
+<script>
+    var canvas = document.getElementById("myCanvas");//获取canvas对象
+    var ctx = canvas.getContext("2d");//创建context对象
+
+    //1.给画布设置背景图片
+    canvas.style.background = "url(image/烤箱.jpg) no-repeat";
+
+    //2.绘制遮罩层
+    ctx.beginPath();
+    ctx.fillStyle = "rgb(211,211,211)";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    //3.绑定事件
+    //当鼠标按下的并且移动的时候 获取鼠标的位置,为中心,绘制圆形区域进行涂抹
+    $canvas = $("canvas");
+    //鼠标按下时移动
+    $canvas.on("mousedown", function () {
+        $canvas.on("mousemove", function (e) {
+            //获取鼠标在canvas中的位置
+            var x = e.pageX - $canvas.offset().left;
+            var y = e.pageY - $canvas.offset().top;
+            //以x,y为中心绘制圆
+            ctx.beginPath();
+            ctx.globalCompositeOperation = "destination-out"; //指定在目标图片上绘制源图的方式
+            ctx.arc(x, y, 20, 0, 2 * Math.PI);
+            ctx.fill();
+
+            //实现涂抹
+            // getImageData:返回一个对象,data:颜色信息  height  width
+            var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            var data = imageData.data;
+            var pixelNumber = 0;
+            //统计没有涂抹的像素点的个数
+            for (var i = 0; i < data.length; i += 4) {
+                if (data[i] == 211 && data[i + 1] == 211 && data[i + 2] == 211 && data[i + 3] == 255) {
+                    pixelNumber++;
+                }
+            }
+            if (pixelNumber < canvas.width * canvas.height / 2) {
+                //清除画布  显示奖品
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                //解除所有事件
+                $canvas.off("mousedown mousemove");
+            }
+        });
+    });
+
+    //鼠标抬起 解除事件绑定
+    $canvas.on("mouseup mouseleave", function () {//mouseleave:解决鼠标在canvas区域的时候抬起鼠标,在进入的时候还会触发mousemove
+        $canvas.off("mousemove");
+
+    });
+</script>
